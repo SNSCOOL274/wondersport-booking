@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองสนามฟุตบอล - Wondersport x Icecool</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Kanit) -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Kanit', sans-serif;
+            transition: all 0.25s ease-in-out;
+        }
+
+        body {
+            background-color: #f4f7fe;
+            color: #2b3674;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .card-custom {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .card-header-custom {
+            background: #4318ff;
+            color: white;
+            padding: 18px 25px;
+            font-weight: 600;
+            border-radius: 20px 20px 0 0 !important;
+        }
+
+        .badge-pending { background-color: #ffb547; color: #fff; }
+        .badge-approved { background-color: #01b574; color: #fff; }
+        .badge-rejected { background-color: #ee5d50; color: #fff; }
+
+        .step-section {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .step-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .contact-footer {
+            margin-top: auto;
+            background: #111c44;
+            color: #ffffff;
+            padding: 15px 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        }
+
+        .contact-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 8px 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary-custom {
+            background: #4318ff;
+            border: none;
+            border-radius: 14px;
+            padding: 12px 25px;
+            font-weight: 600;
+            box-shadow: 0 6px 18px rgba(67, 24, 255, 0.25);
+            color: #fff;
+        }
+
+        .btn-primary-custom:hover {
+            background: #3311cc;
+            transform: translateY(-2px);
+            color: #fff;
+        }
+
+        .equip-item-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+        }
+
+        .float-booking-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 99;
+            box-shadow: 0 10px 25px rgba(67, 24, 255, 0.4);
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+        }
+        .clickable-row:hover {
+            background-color: #f1f5f9 !important;
+        }
+
+        /* --- สไตล์ส่วนตารางเวลา Slot Grid --- */
+        .slot-card {
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1.5px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .slot-available {
+            background-color: #e6f7ff;
+            border-color: #91caff;
+            color: #0958d9;
+            cursor: pointer;
+        }
+        .slot-available:hover {
+            background-color: #bae0ff;
+            transform: translateY(-2px);
+        }
+        .slot-booked {
+            background-color: #fff1f0;
+            border-color: #ffa39e;
+            color: #cf1322;
+            cursor: not-allowed;
+        }
+        .slot-pending {
+            background-color: #fffbe6;
+            border-color: #ffe58f;
+            color: #d48806;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4" href="#" onclick="showStep('step-home')">
+                <i class="fa-solid fa-futbol text-warning fs-3"></i>
+                <span>Wondersport <span class="fw-light">x Icecool</span></span>
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <!-- ปุ่มเมนูแอดมิน (จะซ่อนไว้ก่อน จนกว่าระบบจะตรวจสอบพบว่าเป็นแอดมิน) -->
+                <a id="adminMenuBtn" href="admin.html" class="btn btn-danger rounded-pill px-3 py-1 btn-sm fw-semibold" style="display: none;">
+                    <i class="fa-solid fa-user-shield me-1"></i> เมนูแอดมิน (อนุมัติการจอง)
+                </a>
+
+                <button class="btn btn-light rounded-pill px-3 py-1 btn-sm fw-semibold text-primary" onclick="showStep('step-profile')">
+                    <i class="fa-solid fa-user-gear me-1"></i> โปรไฟล์ / ประวัติการจอง
+                </button>
+                <div class="text-white text-end d-none d-sm-block">
+                    <small class="d-block text-white-50">ผู้ใช้งานระบบ</small>
+                    <span id="navUserName" class="fw-semibold">กำลังตรวจสอบ...</span>
+                </div>
+                <button id="logoutBtn" class="btn btn-outline-light rounded-pill px-3 py-1 btn-sm">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i> ออกจากระบบ
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Floating Button สำหรับกดเริ่มจอง -->
+    <button class="btn btn-warning fw-bold text-dark float-booking-btn" onclick="showStep('step-booking-1')">
+        <i class="fa-solid fa-calendar-plus me-2"></i> จองสนามฟุตบอลเลย!
+    </button>
+
+    <!-- Main Container -->
+    <div class="container my-4 mb-5">
+        
+        <!-- ================= PAGE 0: HOME / REALTIME SCHEDULE ================= -->
+        <div id="step-home" class="step-section active">
+            <div class="card card-custom mb-4">
+                <div class="card-body p-5 text-center bg-white rounded-4">
+                    <h2 class="fw-bold text-primary mb-2">ยินดีต้อนรับสู่ระบบจองสนาม Wondersport x Icecool</h2>
+                    <p class="text-muted mb-3">ตรวจสอบตารางเวลาว่างและสถานะการจองสนามแบบ Real-time ได้จากด้านล่างนี้</p>
+                    
+                    <!-- ส่วนตารางแสดงช่วงเวลาว่าง / ไม่ว่าง -->
+                    <div class="p-4 bg-light rounded-4 border text-start mb-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                            <h5 class="fw-bold text-primary mb-0">
+                                <i class="fa-regular fa-calendar-check me-2"></i>ตารางเวลาสนาม (สถานะการจองประจำวัน)
+                            </h5>
+                            <div class="d-flex gap-3 fs-7">
+                                <div><span class="badge bg-primary me-1">&nbsp;</span> ว่าง (คลิกเพื่อจอง)</div>
+                                <div><span class="badge bg-warning text-dark me-1">&nbsp;</span> รออนุมัติ</div>
+                                <div><span class="badge bg-danger me-1">&nbsp;</span> ถูกจองแล้ว</div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium fs-7">เลือกสนามที่ต้องการดู</label>
+                                <select id="gridCourtSelect" class="form-select rounded-3" onchange="renderTimeGrid()">
+                                    <option value="สนามฟุตบอล 1 ">สนามฟุตบอล 1 </option>
+                                    <option value="สนามฟุตบอล 2 ">สนามฟุตบอล 2 </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium fs-7">เลือกวันที่ต้องการดู</label>
+                                <input type="date" id="gridDateSelect" class="form-select rounded-3" onchange="renderTimeGrid()">
+                            </div>
+                        </div>
+
+                        <div id="timeGridContainer" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2">
+                            <!-- JS Render Slots -->
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary-custom px-4 py-2 mt-2" onclick="showStep('step-booking-1')">
+                        <i class="fa-solid fa-calendar-plus me-2"></i> ไปหน้าทำรายการจองสนาม
+                    </button>
+                </div>
+            </div>
+
+            <div class="card card-custom">
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-clock-rotate-left me-2"></i>ตารางเวลาที่มีผู้จองแล้ว (Real-time Schedule)</span>
+                    <span class="badge bg-light text-dark fw-normal fs-7">อัปเดตอัตโนมัติ</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>สนาม</th>
+                                    <th>วันที่ใช้งาน</th>
+                                    <th>ช่วงเวลา</th>
+                                    <th>ผู้จอง (เบอร์โทร)</th>
+                                    <th>วัตถุประสงค์</th>
+                                    <th>สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="homeRealtimeTable">
+                                <tr><td colspan="6" class="text-center py-4 text-muted">กำลังโหลดข้อมูลตารางเวลา...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= PAGE 1: STEP 1 - เลือกสนามและเวลา ================= -->
+        <div id="step-booking-1" class="step-section">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card card-custom">
+                        <div class="card-header-custom d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-calendar-days me-2"></i>ขั้นตอนที่ 1/3: เลือกสนาม วันที่ และช่วงเวลาจอง</span>
+                            <button class="btn btn-sm btn-outline-light" onclick="showStep('step-home')">กลับหน้าหลัก</button>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-medium"><i class="fa-solid fa-stadium me-1 text-primary"></i>เลือกสนาม</label>
+                                <select id="courtSelect" class="form-select rounded-3 py-2">
+                                    <option value="สนามฟุตบอล 1 ">สนามฟุตบอล 1 </option>
+                                    <option value="สนามฟุตบอล 2 ">สนามฟุตบอล 2 </option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-medium"><i class="fa-regular fa-calendar me-1 text-primary"></i>วันที่ต้องการจอง</label>
+                                <input type="date" id="dateSelect" class="form-select rounded-3 py-2" onchange="initTimeDropdowns()" required>
+                            </div>
+
+                            <div class="p-3 bg-light rounded-3 border mt-4">
+                                <label class="form-label fw-bold text-primary mb-2">
+                                    <i class="fa-regular fa-clock me-1"></i>เลือกช่วงเวลาจองใช้งาน (ชั่วโมงละ 100 บาท)
+                                </label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label fs-7 text-muted">เวลาเริ่มต้น</label>
+                                        <select id="startTimeSelect" class="form-select rounded-3" onchange="calculateStep1()">
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fs-7 text-muted">เวลาสิ้นสุด</label>
+                                        <select id="endTimeSelect" class="form-select rounded-3" onchange="calculateStep1()">
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-primary fs-7 fw-semibold">
+                                    ระยะเวลาที่เลือก: <span id="hoursText">2</span> ชั่วโมง | ค่าสนาม: <span id="priceText">200</span> บาท
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="button" class="btn btn-primary-custom px-4 py-2" onclick="goToStep2()">
+                                    ถัดไป: เลือกอุปกรณ์ <i class="fa-solid fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= PAGE 2: STEP 2 - ยืมอุปกรณ์ & วัตถุประสงค์ ================= -->
+        <div id="step-booking-2" class="step-section">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card card-custom">
+                        <div class="card-header-custom d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-box-open me-2"></i>ขั้นตอนที่ 2/3: วัตถุประสงค์ & ยืมอุปกรณ์เพิ่มเติม</span>
+                            <button class="btn btn-sm btn-outline-light" onclick="showStep('step-booking-1')">ย้อนกลับ</button>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">วัตถุประสงค์ในการจองใช้งาน</label>
+                                <select id="purposeSelect" class="form-select rounded-3" onchange="toggleMatchFields()">
+                                    <option value="ฝึกซ้อมทั่วไป / ออกกำลังกาย">ฝึกซ้อมทั่วไป / ออกกำลังกาย</option>
+                                    <option value="แมตช์กระชับมิตร (Friendly Match)">แมตช์กระชับมิตร (Friendly Match)</option>
+                                    <option value="จัดรายการแข่งขัน / ทัวร์นาเมนต์">จัดรายการแข่งขัน / ทัวร์นาเมนต์</option>
+                                </select>
+                            </div>
+
+                            <div id="matchFields" class="p-3 bg-light rounded-3 mb-3 border border-warning" style="display: none;">
+                                <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-trophy text-warning me-1"></i> รายละเอียดคู่แข่งขัน</h6>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label fs-7 fw-medium">ชื่อทีมของคุณ</label>
+                                        <input type="text" id="myTeamInput" class="form-control rounded-3" placeholder="เช่น ทีม Wondersport">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label fs-7 fw-medium">ชื่อทีมฝั่งตรงข้าม (คู่แข่ง)</label>
+                                        <input type="text" id="opponentTeamInput" class="form-control rounded-3" placeholder="เช่น ทีม Icecool FC">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-medium"><i class="fa-solid fa-basketball me-1 text-primary"></i>ยืมอุปกรณ์กีฬา (เลือกได้หลายอย่าง - ยืมฟรี)</label>
+                                
+                                <div class="equip-item-card d-flex align-items-center justify-content-between">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="checkBall" onchange="toggleEquipQty('checkBall', 'qtyBall')">
+                                        <label class="form-check-label fw-medium" for="checkBall">⚽ ลูกฟุตบอล</label>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1" style="width: 120px;">
+                                        <input type="number" id="qtyBall" class="form-control form-control-sm rounded-3 text-center" min="1" value="1" disabled>
+                                        <small class="text-muted">ลูก</small>
+                                    </div>
+                                </div>
+
+                                <div class="equip-item-card d-flex align-items-center justify-content-between">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="checkBib" onchange="toggleEquipQty('checkBib', 'qtyBib')">
+                                        <label class="form-check-label fw-medium" for="checkBib">🎽 เสื้อเอี๊ยมแบ่งทีม</label>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1" style="width: 120px;">
+                                        <input type="number" id="qtyBib" class="form-control form-control-sm rounded-3 text-center" min="1" value="6" disabled>
+                                        <small class="text-muted">ตัว</small>
+                                    </div>
+                                </div>
+
+                                <div class="equip-item-card d-flex align-items-center justify-content-between">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="checkCone" onchange="toggleEquipQty('checkCone', 'qtyCone')">
+                                        <label class="form-check-label fw-medium" for="checkCone">📐 กรวยฝึกซ้อม</label>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1" style="width: 120px;">
+                                        <input type="number" id="qtyCone" class="form-control form-control-sm rounded-3 text-center" min="1" value="10" disabled>
+                                        <small class="text-muted">อัน</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-danger p-3 fs-7 rounded-3 border-danger">
+                                <i class="fa-solid fa-triangle-exclamation me-1 fs-6"></i>
+                                <b>คำเตือน:</b> อุปกรณ์ยืมฟรี! หากสูญหาย ชำรุด หรือเสียหาย ผู้จองต้องชดใช้ตามราคาสินค้าจริง
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-secondary px-4 py-2 rounded-3" onclick="showStep('step-booking-1')">ย้อนกลับ</button>
+                                <button type="button" class="btn btn-primary-custom px-4 py-2" onclick="goToStep3()">
+                                    ถัดไป: สรุปยอด & ชำระเงิน <i class="fa-solid fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= PAGE 3: STEP 3 - สรุปรายการ & แนบสลิป ================= -->
+        <div id="step-booking-3" class="step-section">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card card-custom">
+                        <div class="card-header-custom d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-file-invoice-dollar me-2"></i>ขั้นตอนที่ 3/3: สรุปรายละเอียด & เลือกวิธีชำระเงิน</span>
+                            <button class="btn btn-sm btn-outline-light" onclick="showStep('step-booking-2')">ย้อนกลับ</button>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="p-3 bg-light rounded-3 border mb-3">
+                                <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-circle-info me-1"></i> สรุปรายการจองของคุณ</h6>
+                                <p class="mb-1"><b>สนาม:</b> <span id="sumCourt"></span></p>
+                                <p class="mb-1"><b>วันที่:</b> <span id="sumDate"></span> (เวลา <span id="sumTime"></span>)</p>
+                                <p class="mb-1"><b>วัตถุประสงค์:</b> <span id="sumPurpose"></span></p>
+                                <p class="mb-1" id="sumTeamBox" style="display:none;"><b>คู่แข่งขัน:</b> <span id="sumTeams"></span></p>
+                                <p class="mb-1"><b>อุปกรณ์ที่ยืม:</b> <span id="sumEquip"></span></p>
+                                <hr>
+                                <div class="d-flex justify-content-between fs-5 fw-bold text-success">
+                                    <span>ราคารวมทั้งสิ้น:</span>
+                                    <span id="sumPrice"></span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold"><i class="fa-solid fa-wallet me-1 text-primary"></i>เลือกช่องทางการชำระเงิน</label>
+                                <select id="paymentMethodSelect" class="form-select rounded-3 py-2" onchange="togglePaymentField()">
+                                    <option value="transfer">โอนเงินผ่านธนาคาร (แนบสลิปรูปภาพ)</option>
+                                    <option value="cash">ชำระด้วยเงินสด (ที่สนามกีฬา)</option>
+                                </select>
+                            </div>
+
+                            <div id="transferBox" class="mb-3 p-3 bg-light rounded-3 border">
+                                <label class="form-label fw-medium text-success"><i class="fa-solid fa-qrcode me-1"></i> สแกน QR โอนเงิน & แนบรูปสลิปยืนยัน</label>
+                                <div class="text-center mb-2">
+                                    <div class="p-3 bg-white d-inline-block rounded-3 border">
+                                     <img src="pay.jpg" alt="QR Code พร้อมเพย์" style="width: 400px; height: 400px; object-fit: contain;">
+                                      <p class="mb-0 fs-8 text-muted mt-1">พร้อมเพย์: 098-470-7279 (คุณเติร์ด)</p>
+                                  </div>
+                                </div>
+                                <input type="file" id="slipFileInput" class="form-control rounded-3" accept="image/*" onchange="previewSlipImage(event)">
+                                <small class="text-muted d-block mt-1">อัปโหลดภาพสลิปหลักฐานการโอนเงิน</small>
+                                
+                                <div id="slipPreviewContainer" class="mt-3 text-center" style="display: none;">
+                                    <p class="fs-8 text-muted mb-1">ตัวอย่างสลิปที่แนบ:</p>
+                                    <img id="slipPreviewImg" src="" alt="Slip Preview" class="img-thumbnail rounded-3" style="max-height: 180px;">
+                                </div>
+                            </div>
+
+                            <div id="cashBox" class="alert alert-warning p-3 rounded-3 mb-3" style="display: none;">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                <b>แจ้งเตือนชำระเงินสด:</b> กรุณาบันทึกภาพหน้าจอหน้านี้ หรือจำยอดเงิน และนำมาชำระด้วยเงินสดโดยตรงที่สนามกีฬา <b>ก่อนเวลาใช้งานจริง</b>
+                            </div>
+
+                            <form id="finalSubmitForm">
+                                <button type="submit" class="btn btn-primary-custom w-100 py-3 mt-3">
+                                    <i class="fa-solid fa-check-circle me-2"></i>ยืนยันการจองสนามเสร็จสิ้น
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= PAGE 4: PROFILE & HISTORY ================= -->
+        <div id="step-profile" class="step-section">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card card-custom mb-4">
+                        <div class="card-header-custom d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-user me-2"></i>โปรไฟล์ผู้ใช้งาน & ประวัติการจองทั้งหมด</span>
+                            <button class="btn btn-sm btn-outline-light" onclick="showStep('step-home')">กลับหน้าหลัก</button>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row align-items-center mb-4">
+                                <div class="col-md-8">
+                                    <h4 id="profileName" class="fw-bold text-primary mb-1">กำลังโหลดข้อมูล...</h4>
+                                    <p class="mb-1 text-muted"><i class="fa-solid fa-envelope me-2"></i><span id="profileEmail">-</span></p>
+                                    <p class="mb-0 text-muted"><i class="fa-solid fa-phone me-2"></i><span id="profilePhone">-</span></p>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <div class="p-3 bg-light rounded-3 d-inline-block text-center border">
+                                        <small class="d-block text-muted">ประวัติการจองทั้งหมด</small>
+                                        <span id="profileTotalBookings" class="fw-bold fs-4 text-primary">0 ครั้ง</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-check me-2 text-primary"></i>รายการประวัติการจองของคุณ (คลิกที่แถวเพื่อดูรายละเอียด)</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>สนาม</th>
+                                            <th>วันที่</th>
+                                            <th>เวลา</th>
+                                            <th>วัตถุประสงค์</th>
+                                            <th>ชำระเงิน</th>
+                                            <th>สถานะอนุมัติ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="myHistoryTableBody">
+                                        <tr><td colspan="6" class="text-center text-muted">กำลังโหลดประวัติ...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal รายละเอียดการจอง -->
+    <div class="modal fade" id="bookingDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header bg-primary text-white rounded-top-4">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-file-lines me-2"></i>รายละเอียดข้อมูลการจอง</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="mb-2"><b>สนามที่จอง:</b> <span id="modalCourt" class="text-primary fw-semibold"></span></p>
+                            <p class="mb-2"><b>วันที่ใช้งาน:</b> <span id="modalDate"></span></p>
+                            <p class="mb-2"><b>ช่วงเวลา:</b> <span id="modalTime"></span></p>
+                            <p class="mb-2"><b>วัตถุประสงค์:</b> <span id="modalPurpose"></span></p>
+                            <p class="mb-2" id="modalTeamRow" style="display:none;"><b>คู่แข่งขัน:</b> <span id="modalTeams"></span></p>
+                            <p class="mb-2"><b>อุปกรณ์ที่ยืม:</b> <span id="modalEquip"></span></p>
+                            <p class="mb-2"><b>ราคารวม:</b> <span id="modalPrice" class="text-success fw-bold"></span></p>
+                            <p class="mb-2"><b>ช่องทางชำระ:</b> <span id="modalPayment"></span></p>
+                            <p class="mb-2"><b>สถานะการจอง:</b> <span id="modalStatus"></span></p>
+                        </div>
+                        <div class="col-md-6 text-center border-start">
+                            <label class="form-label fw-bold mb-2"><i class="fa-solid fa-image me-1"></i> หลักฐานสลิปการโอนเงิน</label>
+                            <div id="modalSlipContainer" class="p-2 bg-light rounded-3 border d-flex align-items-center justify-content-center" style="min-height: 220px;">
+                                <span class="text-muted">ไม่มีรูปภาพสลิป (ชำระด้วยเงินสด)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Footer -->
+    <footer class="contact-footer">
+        <div class="container text-center text-md-start">
+            <div class="row align-items-center g-3">
+                <div class="col-md-7">
+                    <h6 class="fw-bold mb-1"><i class="fa-solid fa-headset me-2 text-warning"></i>พบปัญหาในการจองสนาม หรือสอบถามเพิ่มเติม</h6>
+                    <p class="mb-0 fs-7 text-white-50">ระบบบริหารจัดการการจองสนามและการแข่งขันกีฬา Wondersport x Icecool</p>
+                </div>
+                <div class="col-md-5 text-md-end">
+                    <div class="contact-card">
+                        <i class="fa-solid fa-phone-volume text-warning fs-5"></i>
+                        <div class="text-start">
+                            <small class="d-block fs-8 text-white-50">ติดต่อเจ้าหน้าที่ผู้ดูแลระบบ</small>
+                            <span class="fw-bold fs-6">0984707279 (คุณเติร์ด)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Firebase SDK Compat Version 9.23.0 -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBkkSnIQXH32pp87la02ox2IQwynNRjt2U",
+      authDomain: "wondersport-icecool.firebaseapp.com",
+      projectId: "wondersport-icecool",
+      storageBucket: "wondersport-icecool.firebasestorage.app",
+      messagingSenderId: "1096837120033",
+      appId: "1:1096837120033:web:27a4d91176865744ada360",
+      measurementId: "G-8ZGW9XP6VJ"
+    };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        } else {
+            firebase.app();
+        }
+
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        let currentUserData = null;
+        let bookingDraft = {};
+        let slipBase64String = "";
+        let allBookingsList = [];
+
+        function showStep(stepId) {
+            document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (stepId === 'step-home') loadHomeRealtime();
+            if (stepId === 'step-profile') loadProfileAndHistory();
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                database.ref('users/' + user.uid).once('value').then((snapshot) => {
+                    if (snapshot.exists()) {
+                        currentUserData = snapshot.val();
+                        document.getElementById('navUserName').innerText = currentUserData.fullname;
+
+                        if (currentUserData.role === 'admin') {
+                            document.getElementById('adminMenuBtn').style.display = 'inline-block';
+                        }
+                    } else {
+                        document.getElementById('navUserName').innerText = user.email;
+                    }
+                    loadHomeRealtime();
+                });
+            } else {
+                setTimeout(() => {
+                    if (!auth.currentUser) {
+                        window.location.href = "login.html";
+                    }
+                }, 1200);
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = "login.html";
+            });
+        });
+
+        const startTimeSelect = document.getElementById('startTimeSelect');
+        const endTimeSelect = document.getElementById('endTimeSelect');
+        const dateSelectInput = document.getElementById('dateSelect');
+        const gridDateSelectInput = document.getElementById('gridDateSelect');
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        dateSelectInput.value = todayStr;
+        dateSelectInput.min = todayStr;
+
+        if (gridDateSelectInput) {
+            gridDateSelectInput.value = todayStr;
+        }
+
+        function initTimeDropdowns() {
+            startTimeSelect.innerHTML = '';
+            endTimeSelect.innerHTML = '';
+            
+            const selectedDate = dateSelectInput.value;
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const currentDay = String(now.getDate()).padStart(2, '0');
+            const todayStrCheck = `${currentYear}-${currentMonth}-${currentDay}`;
+            const currentHour = now.getHours();
+
+            for (let i = 8; i <= 23; i++) {
+                if (selectedDate === todayStrCheck && i <= currentHour) continue;
+
+                const hourStr = i.toString().padStart(2, '0') + ':00';
+                startTimeSelect.innerHTML += `<option value="${hourStr}">${hourStr} น.</option>`;
+            }
+
+            if (startTimeSelect.options.length === 0) {
+                startTimeSelect.innerHTML = `<option value="">วันนี้หมดเวลาจองแล้ว</option>`;
+            }
+
+            for (let i = 9; i <= 24; i++) {
+                const hourStr = (i === 24 ? '24:00' : i.toString().padStart(2, '0') + ':00');
+                endTimeSelect.innerHTML += `<option value="${hourStr}">${hourStr} น.</option>`;
+            }
+            
+            if (startTimeSelect.options.length > 0 && startTimeSelect.options[0].value !== "") {
+                startTimeSelect.selectedIndex = 0;
+                const startH = parseInt(startTimeSelect.value.split(':')[0]);
+                if (startH + 1 <= 24) {
+                    endTimeSelect.value = (startH + 1).toString().padStart(2, '0') + ':00';
+                }
+            }
+            calculateStep1();
+        }
+        initTimeDropdowns();
+
+        function calculateStep1() {
+            const startVal = startTimeSelect.value;
+            if (!startVal || startVal.includes('หมดเวลา')) {
+                document.getElementById('hoursText').innerText = "0";
+                document.getElementById('priceText').innerText = "0";
+                return 0;
+            }
+
+            const startH = parseInt(startVal.split(':')[0]);
+            const endH = parseInt(endTimeSelect.value.split(':')[0]);
+
+            if (endH <= startH) {
+                document.getElementById('hoursText').innerText = "0 (เวลาไม่ถูกต้อง)";
+                document.getElementById('priceText').innerText = "0";
+                return 0;
+            }
+
+            const diffHours = endH - startH;
+            const totalPrice = diffHours * 100;
+
+            document.getElementById('hoursText').innerText = diffHours;
+            document.getElementById('priceText').innerText = totalPrice;
+            return diffHours;
+        }
+
+        function goToStep2() {
+            const court = document.getElementById('courtSelect').value;
+            const date = document.getElementById('dateSelect').value;
+            const startTime = startTimeSelect.value;
+            const endTime = endTimeSelect.value;
+
+            if (!startTime || startTime.includes('หมดเวลา')) {
+                alert('⚠️ กรุณาเลือกช่วงเวลาเริ่มต้นที่ถูกต้องครับ');
+                return;
+            }
+
+            const startH = parseInt(startTime.split(':')[0]);
+            const endH = parseInt(endTime.split(':')[0]);
+
+            if (endH <= startH) {
+                alert('⚠️ เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้นครับ');
+                return;
+            }
+
+            database.ref('bookings').once('value').then((snapshot) => {
+                let isOverlap = false;
+                if (snapshot.exists()) {
+                    snapshot.forEach((child) => {
+                        const b = child.val();
+                        if (b.courtName === court && b.bookingDate === date && b.status !== 'rejected') {
+                            const bStartH = parseInt(b.startTime.split(':')[0]);
+                            const bEndH = parseInt(b.endTime.split(':')[0]);
+                            if (startH < bEndH && endH > bStartH) {
+                                isOverlap = true;
+                            }
+                        }
+                    });
+                }
+
+                if (isOverlap) {
+                    alert('⚠️ ไม่สามารถจองได้: ช่วงเวลานี้ถูกผู้อื่นจองไปแล้วในระบบ');
+                    return;
+                }
+
+                bookingDraft.courtName = court;
+                bookingDraft.bookingDate = date;
+                bookingDraft.startTime = startTime;
+                bookingDraft.endTime = endTime;
+                bookingDraft.hours = endH - startH;
+                bookingDraft.price = (endH - startH) * 100;
+
+                showStep('step-booking-2');
+            });
+        }
+
+        function toggleMatchFields() {
+            const purpose = document.getElementById('purposeSelect').value;
+            const matchFields = document.getElementById('matchFields');
+            if (purpose.includes('กระชับมิตร') || purpose.includes('ทัวร์นาเมนต์')) {
+                matchFields.style.display = 'block';
+            } else {
+                matchFields.style.display = 'none';
+            }
+        }
+
+        function toggleEquipQty(checkboxId, inputQtyId) {
+            const chk = document.getElementById(checkboxId);
+            const qtyInput = document.getElementById(inputQtyId);
+            qtyInput.disabled = !chk.checked;
+        }
+
+        function goToStep3() {
+            const purpose = document.getElementById('purposeSelect').value;
+            const myTeam = document.getElementById('myTeamInput').value.trim();
+            const opponentTeam = document.getElementById('opponentTeamInput').value.trim();
+
+            if ((purpose.includes('กระชับมิตร') || purpose.includes('ทัวร์นาเมนต์')) && (!myTeam || !opponentTeam)) {
+                alert('⚠️ กรุณากรอกชื่อทีมของคุณและทีมคู่แข่งให้ครบถ้วนครับ');
+                return;
+            }
+
+            bookingDraft.purpose = purpose;
+            bookingDraft.myTeam = myTeam || '-';
+            bookingDraft.opponentTeam = opponentTeam || '-';
+
+            const selectedEquipments = [];
+            if (document.getElementById('checkBall').checked) {
+                selectedEquipments.push(`ลูกฟุตบอล (${document.getElementById('qtyBall').value} ลูก)`);
+            }
+            if (document.getElementById('checkBib').checked) {
+                selectedEquipments.push(`เสื้อเอี๊ยม (${document.getElementById('qtyBib').value} ตัว)`);
+            }
+            if (document.getElementById('checkCone').checked) {
+                selectedEquipments.push(`กรวยฝึกซ้อม (${document.getElementById('qtyCone').value} อัน)`);
+            }
+            bookingDraft.equipment = selectedEquipments.length > 0 ? selectedEquipments.join(', ') : 'ไม่ยืมอุปกรณ์';
+
+            document.getElementById('sumCourt').innerText = bookingDraft.courtName;
+            document.getElementById('sumDate').innerText = bookingDraft.bookingDate;
+            document.getElementById('sumTime').innerText = `${bookingDraft.startTime} - ${bookingDraft.endTime} น.`;
+            document.getElementById('sumPurpose').innerText = bookingDraft.purpose;
+            
+            if (purpose.includes('กระชับมิตร') || purpose.includes('ทัวร์นาเมนต์')) {
+                document.getElementById('sumTeamBox').style.display = 'block';
+                document.getElementById('sumTeams').innerText = `${bookingDraft.myTeam} vs ${bookingDraft.opponentTeam}`;
+            } else {
+                document.getElementById('sumTeamBox').style.display = 'none';
+            }
+
+            document.getElementById('sumEquip').innerText = bookingDraft.equipment;
+            document.getElementById('sumPrice').innerText = `${bookingDraft.price} บาท`;
+
+            showStep('step-booking-3');
+        }
+
+        function togglePaymentField() {
+            const method = document.getElementById('paymentMethodSelect').value;
+            if (method === 'transfer') {
+                document.getElementById('transferBox').style.display = 'block';
+                document.getElementById('cashBox').style.display = 'none';
+            } else {
+                document.getElementById('transferBox').style.display = 'none';
+                document.getElementById('cashBox').style.display = 'block';
+            }
+        }
+
+        function previewSlipImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    slipBase64String = e.target.result;
+                    document.getElementById('slipPreviewImg').src = slipBase64String;
+                    document.getElementById('slipPreviewContainer').style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('finalSubmitForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const paymentMethod = document.getElementById('paymentMethodSelect').value;
+
+            if (paymentMethod === 'transfer' && !slipBase64String) {
+                alert('⚠️ กรุณาแนบภาพสลิปหลักฐานการโอนเงินก่อนยืนยันครับ');
+                return;
+            }
+
+            const finalData = {
+                userId: auth.currentUser.uid,
+                fullname: currentUserData ? currentUserData.fullname : 'ผู้ใช้งานทั่วไป',
+                phone: currentUserData ? currentUserData.phone : '-',
+                courtName: bookingDraft.courtName,
+                bookingDate: bookingDraft.bookingDate,
+                startTime: bookingDraft.startTime,
+                endTime: bookingDraft.endTime,
+                timeSlot: `${bookingDraft.startTime} - ${bookingDraft.endTime} น.`,
+                purpose: bookingDraft.purpose,
+                myTeam: bookingDraft.myTeam,
+                opponentTeam: bookingDraft.opponentTeam,
+                equipment: bookingDraft.equipment,
+                totalPrice: `${bookingDraft.price} บาท`,
+                paymentMethod: paymentMethod === 'transfer' ? 'โอนเงินผ่านธนาคาร' : 'ชำระด้วยเงินสด',
+                slipImage: paymentMethod === 'transfer' ? slipBase64String : '',
+                score: '-',
+                status: "pending",
+                createdAt: new Date().toISOString()
+            };
+
+            database.ref('bookings').push(finalData).then(() => {
+                alert('✅ จองสนามและส่งข้อมูลสำเร็จเรียบร้อย!');
+                slipBase64String = "";
+                document.getElementById('slipPreviewContainer').style.display = 'none';
+                document.getElementById('slipFileInput').value = '';
+                
+                showStep('step-profile');
+            }).catch((err) => {
+                alert('เกิดข้อผิดพลาด: ' + err.message);
+            });
+        });
+
+        function renderTimeGrid() {
+            const selectedCourt = document.getElementById('gridCourtSelect').value;
+            const selectedDate = document.getElementById('gridDateSelect').value;
+            const container = document.getElementById('timeGridContainer');
+
+            if (!container) return;
+            container.innerHTML = '';
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const currentDay = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${currentYear}-${currentMonth}-${currentDay}`;
+            const currentHour = now.getHours();
+
+            for (let h = 8; h < 24; h++) {
+                const startStr = h.toString().padStart(2, '0') + ':00';
+                const endStr = (h + 1).toString().padStart(2, '0') + ':00';
+                const timeText = `${startStr} - ${endStr}`;
+
+                let status = 'available';
+                let bookedByName = '';
+                let isPastTime = false;
+
+                if (selectedDate === todayStr && h <= currentHour) {
+                    isPastTime = true;
+                }
+
+                allBookingsList.forEach(b => {
+                    if (b.courtName === selectedCourt && b.bookingDate === selectedDate && b.status !== 'rejected') {
+                        const bStartH = parseInt(b.startTime.split(':')[0]);
+                        const bEndH = parseInt(b.endTime.split(':')[0]);
+
+                        if (h >= bStartH && h < bEndH) {
+                            if (b.status === 'approved') {
+                                status = 'booked';
+                            } else {
+                                status = 'pending';
+                            }
+                            bookedByName = b.fullname || 'ผู้ใช้งาน';
+                        }
+                    }
+                });
+
+                const col = document.createElement('div');
+                col.className = 'col';
+
+                if (isPastTime) {
+                    col.innerHTML = `
+                        <div class="slot-card slot-booked" style="background-color: #f1f5f9; border-color: #cbd5e1; color: #94a3b8; cursor: not-allowed;" title="เวลาในวันนี้ผ่านไปแล้ว">
+                            <i class="fa-solid fa-hourglass-end mb-1 d-block fs-6"></i>
+                            <div>${timeText}</div>
+                            <span class="badge bg-secondary mt-1 fw-normal" style="font-size:0.7rem;">หมดเวลา</span>
+                        </div>
+                    `;
+                } else if (status === 'available') {
+                    col.innerHTML = `
+                        <div class="slot-card slot-available" onclick="quickSelectSlot('${selectedCourt}', '${selectedDate}', '${startStr}', '${endStr}')">
+                            <i class="fa-regular fa-circle-check text-primary mb-1 d-block fs-6"></i>
+                            <div>${timeText}</div>
+                            <span class="badge bg-primary mt-1 fw-normal" style="font-size:0.7rem;">ว่าง (จอง)</span>
+                        </div>
+                    `;
+                } else if (status === 'booked') {
+                    col.innerHTML = `
+                        <div class="slot-card slot-booked" title="จองโดย: ${bookedByName}">
+                            <i class="fa-solid fa-user-xmark mb-1 d-block fs-6"></i>
+                            <div>${timeText}</div>
+                            <small class="d-block text-truncate mt-1" style="font-size:0.7rem;">${bookedByName}</small>
+                        </div>
+                    `;
+                } else if (status === 'pending') {
+                    col.innerHTML = `
+                        <div class="slot-card slot-pending" title="รออนุมัติโดย: ${bookedByName}">
+                            <i class="fa-solid fa-clock-rotate-left mb-1 d-block fs-6"></i>
+                            <div>${timeText}</div>
+                            <small class="d-block text-truncate mt-1" style="font-size:0.7rem;">รออนุมัติ</small>
+                        </div>
+                    `;
+                }
+
+                container.appendChild(col);
+            }
+        }
+
+        function quickSelectSlot(court, date, startTime, endTime) {
+            document.getElementById('courtSelect').value = court;
+            document.getElementById('dateSelect').value = date;
+            initTimeDropdowns();
+            startTimeSelect.value = startTime;
+            calculateStep1();
+            showStep('step-booking-1');
+        }
+
+        function loadHomeRealtime() {
+            database.ref('bookings').on('value', (snapshot) => {
+                const tableBody = document.getElementById('homeRealtimeTable');
+                tableBody.innerHTML = '';
+                allBookingsList = [];
+
+                if (!snapshot.exists()) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">ยังไม่มีรายการจองในระบบ</td></tr>';
+                    renderTimeGrid();
+                    return;
+                }
+
+                snapshot.forEach((child) => {
+                    const b = child.val();
+                    allBookingsList.push(b);
+                    const tr = document.createElement('tr');
+
+                    let statusBadge = '<span class="badge badge-pending">รออนุมัติ</span>';
+                    if (b.status === 'approved') statusBadge = '<span class="badge badge-approved">อนุมัติแล้ว</span>';
+                    else if (b.status === 'rejected') statusBadge = '<span class="badge badge-rejected">ปฏิเสธ</span>';
+
+                    tr.innerHTML = `
+                        <td class="fw-semibold text-primary">${b.courtName}</td>
+                        <td>${b.bookingDate}</td>
+                        <td><span class="badge bg-light text-dark border">${b.timeSlot}</span></td>
+                        <td><strong>${b.fullname}</strong><br><small class="text-muted"><i class="fa-solid fa-phone"></i> ${b.phone}</small></td>
+                        <td><small>${b.purpose}</small></td>
+                        <td>${statusBadge}</td>
+                    `;
+                    tableBody.prepend(tr);
+                });
+
+                renderTimeGrid();
+            });
+        }
+
+        function loadProfileAndHistory() {
+            if (!auth.currentUser) return;
+            const myUid = auth.currentUser.uid;
+
+            if (currentUserData) {
+                document.getElementById('profileName').innerText = currentUserData.fullname;
+                document.getElementById('profileEmail').innerText = currentUserData.email;
+                document.getElementById('profilePhone').innerText = currentUserData.phone;
+            }
+
+            database.ref('bookings').once('value').then((snapshot) => {
+                const tableBody = document.getElementById('myHistoryTableBody');
+                tableBody.innerHTML = '';
+                let count = 0;
+
+                if (snapshot.exists()) {
+                    snapshot.forEach((child) => {
+                        const b = child.val();
+                        if (b.userId === myUid) {
+                            count++;
+                            const tr = document.createElement('tr');
+                            tr.className = "clickable-row";
+
+                            tr.onclick = function() {
+                                openDetailModal(b);
+                            };
+
+                            let statusBadge = '<span class="badge badge-pending">รออนุมัติ</span>';
+                            if (b.status === 'approved') statusBadge = '<span class="badge badge-approved">อนุมัติแล้ว</span>';
+                            else if (b.status === 'rejected') statusBadge = '<span class="badge badge-rejected">ปฏิเสธ</span>';
+
+                            tr.innerHTML = `
+                                <td class="fw-semibold text-primary">${b.courtName}</td>
+                                <td>${b.bookingDate}</td>
+                                <td>${b.timeSlot}</td>
+                                <td><small>${b.purpose}</small></td>
+                                <td><span class="badge bg-info text-dark">${b.paymentMethod}</span></td>
+                                <td>${statusBadge}</td>
+                            `;
+                            tableBody.prepend(tr);
+                        }
+                    });
+                }
+
+                document.getElementById('profileTotalBookings').innerText = `${count} ครั้ง`;
+                if (count === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">คุณยังไม่มีประวัติการจองสนาม</td></tr>';
+                }
+            });
+        }
+
+        function openDetailModal(b) {
+            document.getElementById('modalCourt').innerText = b.courtName;
+            document.getElementById('modalDate').innerText = b.bookingDate;
+            document.getElementById('modalTime').innerText = b.timeSlot;
+            document.getElementById('modalPurpose').innerText = b.purpose;
+            
+            if (b.purpose && (b.purpose.includes('กระชับมิตร') || b.purpose.includes('ทัวร์นาเมนต์'))) {
+                document.getElementById('modalTeamRow').style.display = 'block';
+                document.getElementById('modalTeams').innerText = `${b.myTeam} vs ${b.opponentTeam}`;
+            } else {
+                document.getElementById('modalTeamRow').style.display = 'none';
+            }
+
+            document.getElementById('modalEquip').innerText = b.equipment || 'ไม่ยืมอุปกรณ์';
+            document.getElementById('modalPrice').innerText = b.totalPrice;
+            document.getElementById('modalPayment').innerText = b.paymentMethod;
+
+            let statusText = '<span class="badge badge-pending">รออนุมัติ</span>';
+            if (b.status === 'approved') statusText = '<span class="badge badge-approved">อนุมัติแล้ว</span>';
+            else if (b.status === 'rejected') statusText = '<span class="badge badge-rejected">ปฏิเสธ</span>';
+            document.getElementById('modalStatus').innerHTML = statusText;
+
+            const slipContainer = document.getElementById('modalSlipContainer');
+            if (b.slipImage && b.slipImage.startsWith('data:image')) {
+                slipContainer.innerHTML = `<img src="${b.slipImage}" alt="Slip Image" class="img-fluid rounded-3 shadow-sm" style="max-height: 280px; object-fit: contain;">`;
+            } else {
+                slipContainer.innerHTML = `<span class="text-muted"><i class="fa-solid fa-money-bill-wave me-1"></i> ชำระด้วยเงินสดที่สนามกีฬา</span>`;
+            }
+
+            const detailModal = new bootstrap.Modal(document.getElementById('bookingDetailModal'));
+            detailModal.show();
+        }
+    </script>
+</body>
+</html>
